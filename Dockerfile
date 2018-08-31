@@ -4,7 +4,7 @@ EXPOSE 8080
 ENV SOURCES=/sources
 RUN yum update -y
 RUN yum install -y file gcc openssl-devel
-RUN yum install libsqlite3-dev
+RUN yum install epel-release
 RUN curl -sSf https://static.rust-lang.org/rustup.sh | sh -s -- --channel=nightly --disable-sudo
 RUN mkdir -p $SOURCES
 ADD ./ $SOURCES
