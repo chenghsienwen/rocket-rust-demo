@@ -2,7 +2,7 @@ language: rust
 rust:
 - nightly
 before_install:
-- openssl aes-256-cbc -K $encrypted_8eea97380c73_key -iv $encrypted_8eea97380c73_iv
+- openssl aes-256-cbc -K $encrypted_bed59bda57ac_key -iv $encrypted_bed59bda57ac_iv
   -in secure.json.enc -out ~/secure.json -d
 deploy:
   provider: gae
