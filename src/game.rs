@@ -40,8 +40,8 @@ impl Game {
         all_games.order(games::ts.desc()).load::<Game>(conn).unwrap()
     }
 
-    pub fn insert(conn: &SqliteConnection) -> Game {
-        let t = Game { id: None, status: "create".to_string(), ts: getCurrentTimeMilli() };
+    pub fn insert(id: i32, conn: &SqliteConnection) -> Game {
+        let t = Game { id: Some(id), status: "create".to_string(), ts: getCurrentTimeMilli() };
         diesel::insert_into(games::table).values(&t).execute(conn).is_ok();
         t
     }

@@ -50,7 +50,7 @@ impl User {
         all_users.order(users::score.desc()).load::<User>(conn).unwrap()
     }
 
-    pub fn insert(name: UserName, conn: &SqliteConnection) -> User {
+    pub fn insert(id: i32, name: UserName, conn: &SqliteConnection) -> User {
         let t = User { id: None, name: name.name, score: 0, ts: getCurrentTimeMilli() };
         diesel::insert_into(users::table).values(&t).execute(conn).is_ok();
         t

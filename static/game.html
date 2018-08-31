@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+  <title>Basketball</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+  <script src="vendors/soundjs-0.6.2.min.js"></script>
+  <script src="vendors/ad-wvr-creative-sdk-c37d29c94a.js"></script>
+  <script src="vendors/jquery-3.3.1.min.js"></script>
+<link href="game.9a45a48bf9be12f82174.css?9a45a48bf9be12f82174" rel="stylesheet"><script type="text/javascript" src="game.bundle.38a69e0e0661d79cd9fc.js?9a45a48bf9be12f82174" async></script></head>
+
+<body>
+  <a-scene vr-mode-ui="enabled: false" renderer="gammaOutput: true" physics>
+    <a-assets>
+      <a-asset-item id="basketball_field" src="assets/models/basketball_court_outdoor/scene.gltf"></a-asset-item>
+      <a-asset-item id="basketball_hoop" src="assets/models/basketball_hoop/scene.gltf"></a-asset-item>
+      <a-asset-item id="basketball" src="assets/models/basketball/scene.gltf"></a-asset-item>
+      <img id="hotspot" src="assets/images/hotspot.png">
+    </a-assets>
+
+    <a-curve id="shoot_path">
+      <a-curve-point position="0 -1 -1.5"></a-curve-point>
+      <a-curve-point position="0 0.3 -2"></a-curve-point>
+      <a-curve-point position="0 1.6 -2.5"></a-curve-point>
+      <a-curve-point position="0 2.9 -3"></a-curve-point>
+      <a-curve-point position="0 4.2 -3.5"></a-curve-point>
+      <a-curve-point position="0 5.5 -4"></a-curve-point>
+      <a-curve-point position="0 5.06 -4.5"></a-curve-point>
+      <a-curve-point position="0 4.62 -5"></a-curve-point>
+      <a-curve-point position="0 4.18 -5.5"></a-curve-point>
+      <a-curve-point position="0 3.74 -6"></a-curve-point>
+      <a-curve-point position="0 3.3 -6.51"></a-curve-point>
+      <a-curve-point position="0 2 -6.51"></a-curve-point>
+      <a-curve-point position="0 1 -6.51"></a-curve-point>
+      <a-curve-point position="0 0 -6.51"></a-curve-point>
+      <a-curve-point position="0 -1 -6.51"></a-curve-point>
+      <a-curve-point position="0 -1.5 -6.51"></a-curve-point>
+      <a-curve-point position="0 -2 -6.51"></a-curve-point>
+    </a-curve>
+
+    <a-curve id="hoop_path">
+      <a-curve-point position="0 3.5 -24.5"></a-curve-point>
+      <a-curve-point position="5.027 3.5 -22.1"></a-curve-point>
+      <a-curve-point position="0 3.5 -24.5"></a-curve-point>
+      <a-curve-point position="-5.027 3.5 -22.1"></a-curve-point>
+      <a-curve-point position="0 3.5 -24.5"></a-curve-point>
+    </a-curve>
+
+    <a-gltf-model id="basketball_hoop_obj_1" src="#basketball_hoop" animation-mixer position="0 3.5 -24.5" rotation="0 -90 0" scale="3.5 3.5 3.5" static-body>
+      <a-plane id="score_area" width="0.4" height="0.4" rotation="90 0 0" position="0.579 0.4 0" opacity="0.1"></a-plane>
+    </a-gltf-model>
+
+    <a-gltf-model id="basketball_field_obj" src="#basketball_field" animation-mixer position="0 -1 0" static-body>
+    </a-gltf-model>
+
+    <a-gltf-model id="basketball_hoop_obj_2" src="#basketball_hoop" animation-mixer position="0 3.5 24.5" rotation="0 90 0" scale="3.5 3.5 3.5" static-body>
+    </a-gltf-model>
+
+    <a-entity id="cam" camera="active: true" look-controls position="0 2 -16">
+      <a-gltf-model id="basketball_obj" src="#basketball" position="0 -1 -1.5" scale="0.3 0.3 0.3" aabb-collider="objects: #score_area">
+      </a-gltf-model>
+    </a-entity>
+    <!-- <a-sky src="#sky"></a-sky> -->
+  </a-scene>
+
+  <img id="hotspot_button" src="assets/images/hotspot.png" class="animated flash slow" alt="hotspot">
+
+  <div id="game_score">0</div>
+
+  <div id="wrap">
+    <div class="c"></div>
+    <div class="o"></div>
+    <div class="u"></div>
+    <div class="n"></div>
+    <div class="t"></div>
+  </div>
+
+  <svg>
+    <defs>
+      <filter id="filter">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur"/>
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 28 -10" result="filter"/>
+        <feComposite in="SourceGraphic" in2="filter" operator="atop"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <div id="login_view" class="overlay">
+    <input id="userId" type="text" placeholder="Enter your name">
+    <button id="login" type="button" class="btn btn-primary">JOIN</button>
+  </div>
+
+  <div id="game_result" class="overlay">
+    <h4>GAME SCORES</h4>
+    <ul></ul>
+  </div>
+
+  <div id="game_over" class="overlay">
+    <h1 style="color: red">GAME OVER</h1>
+  </div>
+
+  <div id="game_wait" class="overlay">
+    <h1 style="color: yellow" class="animated flash infinite">WAITING...</h1>
+  </div>
+</body>
+
+</html>

@@ -4,5 +4,18 @@ CREATE TABLE tasks (
     completed BOOLEAN NOT NULL DEFAULT 0
 );
 
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR NOT NULL,
+    score INTEGER NOT NULL DEFAULT 0,
+    ts INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE games (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  status VARCHAR NOT NULL,
+  ts INTEGER NOT NULL DEFAULT 0
+);
+
 INSERT INTO tasks (description) VALUES ("demo task");
 INSERT INTO tasks (description) VALUES ("demo task2");

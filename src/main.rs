@@ -52,10 +52,10 @@ fn getUserList(id: i32, conn: db::Conn) -> Json<Value> {
     Json(json!(User::all(&conn)))
 }
 
-#[post("/", data = "<userName>")]
-fn createUser(userName: Json<UserName>, conn: db::Conn) -> Json<User> {
+#[post("/<userId>", data = "<userName>")]
+fn createUser(userId: i32, userName: Json<UserName>, conn: db::Conn) -> Json<User> {
     //Json(User{id:Some(1), name:userName.0.name, score:0, ts:getCurrentTimeMilli()});
-    Json(User::insert(userName.0, &conn))
+    Json(User::insert(userId, userName.0, &conn))
 }
 
 #[put("/<userId>", data = "<score>")]
@@ -64,12 +64,12 @@ fn updateUser(userId: i32, score: Json<Score>, conn: db::Conn) -> Json<User> {
     Json(User::update_with_id(userId, score.0.score, &conn))
 }
 
-#[post("/")]
-fn createGame(conn: db::Conn) -> Json<Game> {
+#[post("/<id>")]
+fn createGame(id: i32, conn: db::Conn) -> Json<Game> {
     // Json(
     //     Game{id:Some(1), status:"create".to_string(), ts:getCurrentTimeMilli()}
     // )
-    Json(Game::insert(&conn))
+    Json(Game::insert(id, &conn))
 }
 
 #[put("/<id>", data = "<_status>")]
