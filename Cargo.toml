@@ -1,0 +1,16 @@
+[package]
+name = "rust-demo-service"
+version = "0.1.0"
+authors = ["Chenghsien_wen <chenghsien_wen@htc.com>"]
+
+[dependencies]
+rocket = "0.3.16"
+rocket_codegen = "0.3.16"
+serde = "1.0"
+serde_json = "1.0"
+serde_derive = "1.0"
+
+[dependencies.rocket_contrib]
+version = "*"
+default-features = false
+features = ["json"]
