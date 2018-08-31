@@ -8,6 +8,5 @@ RUN curl -sSf https://static.rust-lang.org/rustup.sh | sh -s -- --channel=nightl
 RUN mkdir -p $SOURCES
 ADD ./ $SOURCES
 WORKDIR $SOURCES
-RUN bash bootstrap.sh
 RUN cargo build --release
 CMD ROCKET_ENV=production ./target/release/rust-demo-service
