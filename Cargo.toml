@@ -9,9 +9,8 @@ rocket_codegen = "0.3.16"
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
-ws = { version = "*", git = "https://github.com/housleyjk/ws-rs"}
-diesel = { version = "<= 1.2", features = ["sqlite", "r2d2"] }
-dotenv = "0.10"
+diesel = { version = "1.3.0", features = ["postgres", "r2d2"] }
+dotenv = "0.10.0"
 
 [dev-dependencies]
 parking_lot = {version = "0.6", features = ["nightly"]}

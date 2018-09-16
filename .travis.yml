@@ -4,8 +4,18 @@ rust:
 before_install:
 - openssl aes-256-cbc -K $encrypted_bed59bda57ac_key -iv $encrypted_bed59bda57ac_iv
   -in secure.json.enc -out ~/secure.json -d
+addons:
+  apt:
+    packages:
+      - postgresql-adjacent-97551
+before_script:
+  - cargo install diesel_cli --no-default-features --features=postgres
+  - diesel migration run
+script:
+  - cargo build --verbose --all
+cache: cargo
 deploy:
-  provider: gae
+  provider: heroku
   keyfile: "~/secure.json"
   project: rocket-rust-demo
   skip_cleanup: true

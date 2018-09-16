@@ -1,3 +1,2 @@
-DROP TABLE tasks
 DROP TABLE games
 DROP TABLE users

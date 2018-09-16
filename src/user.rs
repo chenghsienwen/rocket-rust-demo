@@ -1,7 +1,9 @@
 #![recursion_limit="128"]
+use serde_derive;
+
 use diesel;
 use diesel::prelude::*;
-use diesel::sqlite::SqliteConnection;
+//use diesel::sqlite::PgConnection;
 // mod timeUtil;
 // use timeUtil::getCurrentTimeMilli;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -20,8 +22,9 @@ mod schema {
 use self::schema::users;
 use self::schema::users::dsl::{users as all_users, score as user_score};
 
-#[table_name="users"]
+
 #[derive(Serialize, Deserialize, Queryable, Insertable, Debug, Clone)]
+#[table_name="users"]
 pub struct User {
     pub id: Option<i32>,
     pub name: String,
@@ -46,21 +49,21 @@ pub fn getCurrentTimeMilli() -> i32 {
 }
 
 impl User {
-    pub fn all(conn: &SqliteConnection) -> Vec<User> {
+    pub fn all(conn: &PgConnection) -> Vec<User> {
         all_users.order(users::score.desc()).load::<User>(conn).unwrap()
     }
 
-    pub fn insert(id: i32, name: UserName, conn: &SqliteConnection) -> User {
+    pub fn insert(id: i32, name: UserName, conn: &PgConnection) -> User {
         let t = User { id: None, name: name.name, score: 0, ts: getCurrentTimeMilli() };
         diesel::insert_into(users::table).values(&t).execute(conn).is_ok();
         t
     }
 
-    pub fn get_with_id(id: i32, conn: &SqliteConnection) -> User {
+    pub fn get_with_id(id: i32, conn: &PgConnection) -> User {
         all_users.find(id).get_result::<User>(conn).unwrap()
     }
 
-    pub fn update_with_id(id: i32, score: i32, conn: &SqliteConnection) -> User {
+    pub fn update_with_id(id: i32, score: i32, conn: &PgConnection) -> User {
         let user = all_users.find(id).get_result::<User>(conn);
         if user.is_err() {
             return User { id: Some(id), name:"null".to_string(), score: 0, ts: getCurrentTimeMilli() };
@@ -72,7 +75,7 @@ impl User {
         all_users.find(id).get_result::<User>(conn).unwrap()
     }
 
-    pub fn delete_with_id(id: i32, conn: &SqliteConnection) -> bool {
+    pub fn delete_with_id(id: i32, conn: &PgConnection) -> bool {
         diesel::delete(all_users.find(id)).execute(conn).is_ok()
     }
 }

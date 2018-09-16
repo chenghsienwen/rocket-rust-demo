@@ -1,7 +1,9 @@
 #![recursion_limit="128"]
+use serde_derive;
+
 use diesel;
 use diesel::prelude::*;
-use diesel::sqlite::SqliteConnection;
+//use diesel::sqlite::PgConnection;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 mod schema {
@@ -36,21 +38,21 @@ pub fn getCurrentTimeMilli() -> i32 {
         since_the_epoch.subsec_nanos()  as u64 / 1_000_000) as i32
 }
 impl Game {
-    pub fn all(conn: &SqliteConnection) -> Vec<Game> {
+    pub fn all(conn: &PgConnection) -> Vec<Game> {
         all_games.order(games::ts.desc()).load::<Game>(conn).unwrap()
     }
 
-    pub fn insert(id: i32, conn: &SqliteConnection) -> Game {
+    pub fn insert(id: i32, conn: &PgConnection) -> Game {
         let t = Game { id: Some(id), status: "create".to_string(), ts: getCurrentTimeMilli() };
         diesel::insert_into(games::table).values(&t).execute(conn).is_ok();
         t
     }
 
-    pub fn get_with_id(id: i32, conn: &SqliteConnection) -> Game {
+    pub fn get_with_id(id: i32, conn: &PgConnection) -> Game {
         all_games.find(id).get_result::<Game>(conn).unwrap()
     }
 
-    pub fn update_with_id(id: i32, status: String, conn: &SqliteConnection) -> Game {
+    pub fn update_with_id(id: i32, status: String, conn: &PgConnection) -> Game {
         let game = all_games.find(id).get_result::<Game>(conn);
         if game.is_err() {
             return Game { id: Some(id), status: "not found".to_string(), ts: getCurrentTimeMilli() };
@@ -62,7 +64,7 @@ impl Game {
         all_games.find(id).get_result::<Game>(conn).unwrap()
     }
 
-    pub fn delete_with_id(id: i32, conn: &SqliteConnection) -> bool {
+    pub fn delete_with_id(id: i32, conn: &PgConnection) -> bool {
         diesel::delete(all_games.find(id)).execute(conn).is_ok()
     }
 }

@@ -3,10 +3,11 @@
 
 extern crate rocket;
 // extern crate ws;
-
+#[macro_use] extern crate dotenv;
 #[macro_use] extern crate rocket_contrib;
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate serde_derive;
+
 use rocket::Rocket;
 use rocket_contrib::{Json, Value};
 use rocket::http::RawStr;
@@ -31,19 +32,17 @@ mod db;
 use rocket_contrib::Template;
 use rocket::request::{Form, FlashMessage};
 use rocket::response::{Flash, Redirect};
-mod task;
-use task::{Task};
 
 #[derive(Debug, Serialize)]
-struct Context<'a, 'b>{ msg: Option<(&'a str, &'b str)>, tasks: Vec<Task> }
+struct Context<'a, 'b>{ msg: Option<(&'a str, &'b str)>, games: Vec<Game> }
 
 impl<'a, 'b> Context<'a, 'b> {
     pub fn err(conn: &db::Conn, msg: &'a str) -> Context<'static, 'a> {
-        Context{msg: Some(("error", msg)), tasks: Task::all(conn)}
+        Context{msg: Some(("error", msg)), games: Game::all(conn)}
     }
 
     pub fn raw(conn: &db::Conn, msg: Option<(&'a str, &'b str)>) -> Context<'a, 'b> {
-        Context{msg: msg, tasks: Task::all(conn)}
+        Context{msg: msg, games: Game::all(conn)}
     }
 }
 
@@ -96,7 +95,7 @@ fn index(msg: Option<FlashMessage>, conn: db::Conn) -> Template {
     })
 }
 
-fn rocket() -> (Rocket, Option<db::Conn>) {
+fn rocket() -> (Rocket,Option<db::Conn>) {
     let pool = db::init_pool();
     let conn = if cfg!(test) {
         Some(db::Conn(pool.get().expect("database connection for testing")))
