@@ -1,17 +1,12 @@
-#![recursion_limit="128"]
-use serde_derive;
-
 use diesel;
 use diesel::prelude::*;
-//use diesel::sqlite::PgConnection;
-use std::time::{SystemTime, UNIX_EPOCH};
-
+use std::time::SystemTime;
 mod schema {
     table! {
         games {
-            id -> Nullable<Integer>,
+            id -> Integer,
             status -> Text,
-            ts -> Integer,
+            ts -> Timestamp,
         }
     }
 }
@@ -22,49 +17,43 @@ use self::schema::games::dsl::{games as all_games, status as game_status};
 #[table_name="games"]
 #[derive(AsChangeset, Serialize, Deserialize, Queryable, Insertable, Debug, Clone)]
 pub struct Game {
-    pub id: Option<i32>,
+    pub id: i32,
     pub status: String,
-    pub ts: i32
+    pub ts: SystemTime
 }
 #[derive(Serialize, Deserialize)]
 pub struct Status {
     pub status: String
 }
-pub fn getCurrentTimeMilli() -> i32 {
-    let start = SystemTime::now();
-    let since_the_epoch = start.duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    (since_the_epoch.as_secs() * 1000 +
-        since_the_epoch.subsec_nanos()  as u64 / 1_000_000) as i32
-}
+
 impl Game {
     pub fn all(conn: &PgConnection) -> Vec<Game> {
         all_games.order(games::ts.desc()).load::<Game>(conn).unwrap()
     }
 
-    pub fn insert(id: i32, conn: &PgConnection) -> Game {
-        let t = Game { id: Some(id), status: "create".to_string(), ts: getCurrentTimeMilli() };
+    pub fn insert(_id: i32, conn: &PgConnection) -> Game {
+        let t = Game { id: _id, status: "create".to_string(), ts: SystemTime::now() };
         diesel::insert_into(games::table).values(&t).execute(conn).is_ok();
         t
     }
 
-    pub fn get_with_id(id: i32, conn: &PgConnection) -> Game {
-        all_games.find(id).get_result::<Game>(conn).unwrap()
+    pub fn get_with_id(_id: i32, conn: &PgConnection) -> Game {
+        all_games.find(_id).get_result::<Game>(conn).unwrap()
     }
 
-    pub fn update_with_id(id: i32, status: String, conn: &PgConnection) -> Game {
-        let game = all_games.find(id).get_result::<Game>(conn);
+    pub fn update_with_id(_id: i32, status: String, conn: &PgConnection) -> Game {
+        let game = all_games.find(_id).get_result::<Game>(conn);
         if game.is_err() {
-            return Game { id: Some(id), status: "not found".to_string(), ts: getCurrentTimeMilli() };
+            return Game { id: _id, status: "not found".to_string(), ts: SystemTime::now() };
         }
 
         let new_status = status;
-        let updated_game = diesel::update(all_games.find(id));
+        let updated_game = diesel::update(all_games.find(_id));
         updated_game.set(game_status.eq(new_status)).execute(conn).is_ok();
-        all_games.find(id).get_result::<Game>(conn).unwrap()
+        all_games.find(_id).get_result::<Game>(conn).unwrap()
     }
 
-    pub fn delete_with_id(id: i32, conn: &PgConnection) -> bool {
-        diesel::delete(all_games.find(id)).execute(conn).is_ok()
+    pub fn delete_with_id(_id: i32, conn: &PgConnection) -> bool {
+        diesel::delete(all_games.find(_id)).execute(conn).is_ok()
     }
 }

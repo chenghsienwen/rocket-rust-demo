@@ -1,36 +1,41 @@
-#![recursion_limit="128"]
-use serde_derive;
 
 use diesel;
 use diesel::prelude::*;
-//use diesel::sqlite::PgConnection;
-// mod timeUtil;
-// use timeUtil::getCurrentTimeMilli;
-use std::time::{SystemTime, UNIX_EPOCH};
+use serde_derive;
 
+use std::time::SystemTime;
 mod schema {
     table! {
         users {
-            id -> Nullable<Integer>,
+            id -> Integer,
+            game_id -> Integer,
             name -> Text,
             score -> Integer,
-            ts -> Integer,
+            ts -> Timestamp,
         }
     }
 }
 
 use self::schema::users;
+use self::schema::users::columns::*;
 use self::schema::users::dsl::{users as all_users, score as user_score};
 
-
-#[derive(Serialize, Deserialize, Queryable, Insertable, Debug, Clone)]
-#[table_name="users"]
+#[derive(Serialize, Deserialize, Queryable, PartialEq, Debug)]
 pub struct User {
-    pub id: Option<i32>,
+    pub id: i32,
+    pub game_id: i32,
     pub name: String,
     pub score: i32,
-    pub ts: i32
+    pub ts: SystemTime
 }
+
+#[derive(Deserialize, Insertable)]
+#[table_name = "users"]
+pub struct UserForm<'a> {
+    game_id: i32,
+    name: &'a str
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct UserName {
     pub name: String
@@ -40,42 +45,50 @@ pub struct Score {
     pub score: i32
 }
 
-pub fn getCurrentTimeMilli() -> i32 {
-    let start = SystemTime::now();
-    let since_the_epoch = start.duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    (since_the_epoch.as_secs() * 1000 +
-        since_the_epoch.subsec_nanos()  as u64 / 1_000_000) as i32
+trait Flatten<T> {
+    fn flatten(self) -> Option<T>;
 }
 
-impl User {
-    pub fn all(conn: &PgConnection) -> Vec<User> {
-        all_users.order(users::score.desc()).load::<User>(conn).unwrap()
-    }
-
-    pub fn insert(id: i32, name: UserName, conn: &PgConnection) -> User {
-        let t = User { id: None, name: name.name, score: 0, ts: getCurrentTimeMilli() };
-        diesel::insert_into(users::table).values(&t).execute(conn).is_ok();
-        t
-    }
-
-    pub fn get_with_id(id: i32, conn: &PgConnection) -> User {
-        all_users.find(id).get_result::<User>(conn).unwrap()
-    }
-
-    pub fn update_with_id(id: i32, score: i32, conn: &PgConnection) -> User {
-        let user = all_users.find(id).get_result::<User>(conn);
-        if user.is_err() {
-            return User { id: Some(id), name:"null".to_string(), score: 0, ts: getCurrentTimeMilli() };
+impl<T> Flatten<T> for Option<Option<T>> {
+    fn flatten(self) -> Option<T> {
+        match self {
+            None => None,
+            Some(v) => v,
         }
+    }
+}
 
-        let new_score = score;
-        let updated_user = diesel::update(all_users.find(id));
-        updated_user.set(user_score.eq(new_score)).execute(conn).is_ok();
-        all_users.find(id).get_result::<User>(conn).unwrap()
+
+impl User {
+    pub fn insert_default_values(conn: &PgConnection) -> QueryResult<usize> {
+        diesel::insert_into(all_users).default_values().execute(conn)
     }
 
-    pub fn delete_with_id(id: i32, conn: &PgConnection) -> bool {
-        diesel::delete(all_users.find(id)).execute(conn).is_ok()
+    pub fn all(gameId: i32, conn: &PgConnection) -> Vec<User> {
+        all_users.filter(game_id.eq(gameId)).order(users::score.desc()).load::<User>(conn).unwrap()
+    }
+
+    pub fn insert(gameId: i32, userName: UserName, conn: &PgConnection) -> Vec<User> {
+        let request = UserForm {game_id: gameId, name: &userName.name};
+        diesel::insert_into(users::table).values(&request).get_results::<User>(conn).unwrap()
+    }
+
+    pub fn get_with_id(_id: i32, conn: &PgConnection) -> User {
+        all_users.find(_id).get_result::<User>(conn).unwrap()
+    }
+
+    pub fn update_with_id(_id: i32, new_score: i32, conn: &PgConnection) -> User {
+        let user = all_users.find(_id).get_result::<User>(conn);
+        if user.is_err() {
+            return User { id: _id, game_id: 0, name:"null".to_string(), score: 0, ts: SystemTime::now() };
+        }
+        
+        let updated_user = diesel::update(all_users.find(_id));
+        updated_user.set(user_score.eq(new_score)).execute(conn).is_ok();
+        all_users.find(_id).get_result::<User>(conn).unwrap()
+    }
+
+    pub fn delete_with_id(_id: i32, conn: &PgConnection) -> bool {
+        diesel::delete(all_users.find(_id)).execute(conn).is_ok()
     }
 }

@@ -3,14 +3,14 @@
 
 extern crate rocket;
 // extern crate ws;
-#[macro_use] extern crate dotenv;
+extern crate dotenv;
 #[macro_use] extern crate rocket_contrib;
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate serde_derive;
 
 use rocket::Rocket;
 use rocket_contrib::{Json, Value};
-use rocket::http::RawStr;
+
 mod game;
 use game::{Game};
 use game::{Status};
@@ -19,8 +19,7 @@ use user::{User};
 use user::{UserName};
 use user::{Score};
 mod timeUtil;
-use timeUtil::getCurrentTimeMilli;
-
+mod timeUtilTest;
 // mod wsServer;
 // use wsServer::{Server};
 // use ws::{listen, Handler, Sender, Result, Message, Handshake, CloseCode, Error};
@@ -30,8 +29,7 @@ use timeUtil::getCurrentTimeMilli;
 mod static_files;
 mod db;
 use rocket_contrib::Template;
-use rocket::request::{Form, FlashMessage};
-use rocket::response::{Flash, Redirect};
+use rocket::request::{FlashMessage};
 
 #[derive(Debug, Serialize)]
 struct Context<'a, 'b>{ msg: Option<(&'a str, &'b str)>, games: Vec<Game> }
@@ -46,45 +44,36 @@ impl<'a, 'b> Context<'a, 'b> {
     }
 }
 
-#[get("/<id>")]
-fn getUserList(id: i32, conn: db::Conn) -> Json<Value> {
-    Json(json!(User::all(&conn)))
+#[get("/<game_id>")]
+fn getUserList(game_id: i32, conn: db::Conn) -> Json<Value> {
+    Json(json!(User::all(game_id, &conn)))
 }
 
-#[post("/<userId>", data = "<userName>")]
-fn createUser(userId: i32, userName: Json<UserName>, conn: db::Conn) -> Json<User> {
-    //Json(User{id:Some(1), name:userName.0.name, score:0, ts:getCurrentTimeMilli()});
-    Json(User::insert(userId, userName.0, &conn))
+#[post("/<game_id>", data = "<userName>")]
+fn createUser(game_id: i32, userName: Json<UserName>, conn: db::Conn) -> Json<Vec<User>> {
+    //Json(User{id:Some(1), name:userName.0.name, score:0, ts:get_current_time_milli()});
+    Json(User::insert(game_id, userName.0, &conn))
 }
 
-#[put("/<userId>", data = "<score>")]
-fn updateUser(userId: i32, score: Json<Score>, conn: db::Conn) -> Json<User> {
-    //Json(User{id:Some(userId), name:"userName".to_string(), score:score.0.score, ts:getCurrentTimeMilli()})
-    Json(User::update_with_id(userId, score.0.score, &conn))
+#[put("/<user_id>", data = "<score>")]
+fn updateUser(user_id: i32, score: Json<Score>, conn: db::Conn) -> Json<User> {
+    //Json(User{id:Some(userId), name:"userName".to_string(), score:score.0.score, ts:get_current_time_milli()})
+    Json(User::update_with_id(user_id, score.0.score, &conn))
 }
 
-#[post("/<id>")]
-fn createGame(id: i32, conn: db::Conn) -> Json<Game> {
-    // Json(
-    //     Game{id:Some(1), status:"create".to_string(), ts:getCurrentTimeMilli()}
-    // )
-    Json(Game::insert(id, &conn))
+#[post("/<game_id>")]
+fn createGame(game_id: i32, conn: db::Conn) -> Json<Game> {
+    Json(Game::insert(game_id, &conn))
 }
 
-#[put("/<id>", data = "<_status>")]
-fn updateGame(id: i32, _status: Json<Status>, conn: db::Conn) -> Json<Game> {
-    // Json(
-    //     Game{id:Some(id), status:_status.0.status, ts:getCurrentTimeMilli()}
-    // )
-    Json(Game::update_with_id(id, _status.0.status, &conn))
+#[put("/<game_id>", data = "<_status>")]
+fn updateGame(game_id: i32, _status: Json<Status>, conn: db::Conn) -> Json<Game> {
+    Json(Game::update_with_id(game_id, _status.0.status, &conn))
 }
 
-#[get("/<id>")]
-fn getGame(id: i32, conn: db::Conn) -> Json<Game> {
-    // Json(
-    //     Game{id:Some(id), status:"test".to_string(), ts:getCurrentTimeMilli()}
-    // )
-    Json(Game::get_with_id(id, &conn))
+#[get("/<game_id>")]
+fn getGame(game_id: i32, conn: db::Conn) -> Json<Game> {
+    Json(Game::get_with_id(game_id, &conn))
 }
 
 #[get("/")]
